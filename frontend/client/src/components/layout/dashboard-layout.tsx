@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, FolderKanban, ScrollText, LogOut, Vote, Award } from "lucide-react";
+import { ConnectWallet } from "@/components/stacks/connect-wallet";
+import { NetworkSwitcher } from "@/components/stacks/network-switcher";
 
 type Role = "creator" | "participant";
 
@@ -65,9 +67,23 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 mt-auto border-t border-sidebar-border">
+        <div className="p-4 mt-auto border-t border-sidebar-border space-y-3">
+          {/* Wallet Connection */}
+          <div className="px-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Network</span>
+            </div>
+            <NetworkSwitcher />
+          </div>
+          <div className="px-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Wallet</span>
+            </div>
+            <ConnectWallet />
+          </div>
+
           <Link href="/role-selection">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer mt-2">
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Switch Role</span>
             </div>
@@ -78,7 +94,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       {/* Mobile Header (Visible only on small screens) */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background z-50 flex items-center justify-between px-4">
           <span className="font-bold">ClarityVote</span>
-          {/* Mobile menu trigger would go here */}
+          <div className="flex items-center gap-2">
+            <NetworkSwitcher />
+            <ConnectWallet />
+          </div>
       </div>
 
       {/* Main Content */}
