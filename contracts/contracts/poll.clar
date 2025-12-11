@@ -1,5 +1,5 @@
 ;; StackPolls - Decentralized Polling Contract
-;; Uses Clarity 4 functions: stacks-block-time, to-ascii?
+;; Uses Clarity 4 stacks-block-time for time-based functionality
 
 ;; Constants
 (define-constant CONTRACT_OWNER tx-sender)
@@ -51,25 +51,29 @@
 
 ;; Update option vote count
 (define-private (increment-option-votes (poll-id uint) (option-index uint))
-  (let ((option-data (unwrap! (map-get? poll-options { poll-id: poll-id, option-index: option-index }) false)))
-    (map-set poll-options
-      { poll-id: poll-id, option-index: option-index }
-      (merge option-data { vote-count: (+ (get vote-count option-data) u1) })
+  (match (map-get? poll-options { poll-id: poll-id, option-index: option-index })
+    option-data (begin
+      (map-set poll-options
+        { poll-id: poll-id, option-index: option-index }
+        (merge option-data { vote-count: (+ (get vote-count option-data) u1) })
+      )
+      (ok true)
     )
-    true
+    (err false)
   )
 )
 
 ;; Public Functions
 
-;; Create poll - uses stacks-block-time (Clarity 4)
+;; Create poll with duration in seconds
+;; Uses Clarity 4 stacks-block-time for timestamp
 (define-public (create-poll
   (title (string-ascii 100))
   (options (list 10 (string-ascii 50)))
   (duration-seconds uint))
   (let (
     (poll-id (+ (var-get poll-counter) u1))
-    (current-time (stacks-block-time))
+    (current-time stacks-block-time)
     (deadline (+ current-time duration-seconds))
     (option-count (len options))
   )
@@ -98,19 +102,19 @@
   )
 )
 
-;; Vote - uses stacks-block-time for deadline check
+;; Vote on a poll
 (define-public (vote (poll-id uint) (option-index uint))
   (let ((poll (unwrap! (map-get? polls poll-id) ERR_POLL_NOT_FOUND)))
     ;; Validations
     (asserts! (not (get is-closed poll)) ERR_POLL_CLOSED)
-    (asserts! (< (stacks-block-time) (get deadline poll)) ERR_POLL_CLOSED)
+    (asserts! (< stacks-block-time (get deadline poll)) ERR_POLL_CLOSED)
     (asserts! (< option-index (get option-count poll)) ERR_INVALID_OPTION)
     (asserts! (is-none (map-get? voter-records { poll-id: poll-id, voter: tx-sender })) ERR_ALREADY_VOTED)
 
     ;; Record vote
     (map-set voter-records { poll-id: poll-id, voter: tx-sender } {
       option-index: option-index,
-      voted-at: (stacks-block-time)
+      voted-at: stacks-block-time
     })
 
     ;; Update option vote count
@@ -143,9 +147,9 @@
   (map-get? poll-options { poll-id: poll-id, option-index: option-index })
 )
 
-;; Get current block time (Clarity 4)
+;; Get current timestamp using Clarity 4 stacks-block-time
 (define-read-only (get-current-time)
-  (stacks-block-time)
+  stacks-block-time
 )
 
 ;; Check if address has voted
@@ -166,7 +170,7 @@
 ;; Check if poll is expired
 (define-read-only (is-poll-expired (poll-id uint))
   (match (map-get? polls poll-id)
-    poll (>= (stacks-block-time) (get deadline poll))
+    poll (>= stacks-block-time (get deadline poll))
     false
   )
 )
@@ -176,20 +180,33 @@
   (match (map-get? polls poll-id)
     poll (and
       (not (get is-closed poll))
-      (< (stacks-block-time) (get deadline poll))
+      (< stacks-block-time (get deadline poll))
     )
     false
   )
 )
 
-;; Get poll status as ASCII string (demonstrates to-ascii?)
+;; Get poll status
 (define-read-only (get-poll-status (poll-id uint))
   (match (map-get? polls poll-id)
     poll (if (get is-closed poll)
       (ok "closed")
-      (if (>= (stacks-block-time) (get deadline poll))
+      (if (>= stacks-block-time (get deadline poll))
         (ok "expired")
         (ok "active")
+      )
+    )
+    (err ERR_POLL_NOT_FOUND)
+  )
+)
+
+;; Get seconds remaining until deadline
+(define-read-only (get-time-remaining (poll-id uint))
+  (match (map-get? polls poll-id)
+    poll (let ((deadline (get deadline poll)))
+      (if (>= stacks-block-time deadline)
+        (ok u0)
+        (ok (- deadline stacks-block-time))
       )
     )
     (err ERR_POLL_NOT_FOUND)
