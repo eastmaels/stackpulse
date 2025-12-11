@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  fetchCallReadOnlyFunction,
+  callReadOnlyFunction,
   cvToValue,
   uintCV,
   principalCV,
@@ -28,7 +28,7 @@ async function fetchPollCount(
   }
 
   try {
-    const result = await fetchCallReadOnlyFunction({
+    const result = await callReadOnlyFunction({
       network: config.network,
       contractAddress: contract.address,
       contractName: contract.name,
@@ -58,7 +58,7 @@ async function fetchPoll(
   }
 
   try {
-    const result = await fetchCallReadOnlyFunction({
+    const result = await callReadOnlyFunction({
       network: config.network,
       contractAddress: contract.address,
       contractName: contract.name,
@@ -91,7 +91,7 @@ async function fetchPollOption(
   }
 
   try {
-    const result = await fetchCallReadOnlyFunction({
+    const result = await callReadOnlyFunction({
       network: config.network,
       contractAddress: contract.address,
       contractName: contract.name,
@@ -124,7 +124,7 @@ async function fetchHasVoted(
   }
 
   try {
-    const result = await fetchCallReadOnlyFunction({
+    const result = await callReadOnlyFunction({
       network: config.network,
       contractAddress: contract.address,
       contractName: contract.name,

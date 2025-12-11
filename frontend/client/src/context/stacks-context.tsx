@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { AppConfig, UserSession, showConnect } from '@stacks/connect';
+import { showConnect, UserSession } from '@stacks/connect';
 import { NetworkType, DEFAULT_NETWORK } from '@/lib/stacks/config';
 import { WalletState } from '@/lib/stacks/types';
-
-const appConfig = new AppConfig(['store_write', 'publish_data']);
-const userSession = new UserSession({ appConfig });
+import { userSession } from '@/lib/stacks/user-session';
 
 interface StacksContextType {
   wallet: WalletState;
@@ -44,12 +42,19 @@ export function StacksProvider({ children }: { children: React.ReactNode }) {
 
   // Check if user is already signed in on mount
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const userData = userSession.loadUserData();
-      setWallet({
-        isConnected: true,
-        address: getAddressForNetwork(userData, networkType),
-      });
+    try {
+      if (userSession.isUserSignedIn()) {
+        const userData = userSession.loadUserData();
+        setWallet({
+          isConnected: true,
+          address: getAddressForNetwork(userData, networkType),
+        });
+      }
+    } catch (error) {
+      // Clear stale session data if version mismatch
+      console.warn('Clearing stale session data:', error);
+      localStorage.removeItem('blockstack-session');
+      userSession.signUserOut();
     }
   }, [networkType]);
 
@@ -59,20 +64,16 @@ export function StacksProvider({ children }: { children: React.ReactNode }) {
         name: 'StackPolls',
         icon: window.location.origin + '/favicon.png',
       },
-      redirectTo: window.location.pathname,
+      redirectTo: '/',
       onFinish: () => {
-        const userData = userSession.loadUserData();
-        setWallet({
-          isConnected: true,
-          address: getAddressForNetwork(userData, networkType),
-        });
+        window.location.reload();
       },
       onCancel: () => {
         console.log('User cancelled wallet connection');
       },
       userSession,
     });
-  }, [networkType]);
+  }, []);
 
   const disconnectWallet = useCallback(() => {
     userSession.signUserOut();

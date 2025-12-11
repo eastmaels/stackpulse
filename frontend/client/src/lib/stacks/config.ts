@@ -1,4 +1,4 @@
-import { STACKS_TESTNET, STACKS_MAINNET, StacksNetwork } from '@stacks/network';
+import { StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 
 export type NetworkType = 'testnet' | 'mainnet';
 
@@ -12,13 +12,13 @@ export const NETWORKS: Record<NetworkType, {
   contractAddress: string;
 }> = {
   testnet: {
-    network: STACKS_TESTNET,
+    network: new StacksTestnet(),
     explorerUrl: 'https://explorer.stacks.co/?chain=testnet',
     apiUrl: 'https://api.testnet.hiro.so',
     contractAddress: import.meta.env.VITE_POLL_CONTRACT_ADDRESS_TESTNET || '',
   },
   mainnet: {
-    network: STACKS_MAINNET,
+    network: new StacksMainnet(),
     explorerUrl: 'https://explorer.stacks.co',
     apiUrl: 'https://api.hiro.so',
     contractAddress: import.meta.env.VITE_POLL_CONTRACT_ADDRESS_MAINNET || '',
