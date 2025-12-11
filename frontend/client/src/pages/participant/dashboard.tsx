@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Vote, Clock, CheckCircle2, AlertCircle } from "lucide-react";
@@ -47,6 +48,7 @@ interface VoteDialogProps {
 
 function VoteDialog({ poll, open, onOpenChange }: VoteDialogProps) {
   const { wallet } = useStacks();
+  const [, navigate] = useLocation();
   const { vote, txState, resetTxState } = usePollActions();
   const { invalidatePoll, invalidateAll } = useInvalidatePolls();
   const { data: options, isLoading: optionsLoading } = usePollOptions(
@@ -55,6 +57,21 @@ function VoteDialog({ poll, open, onOpenChange }: VoteDialogProps) {
   );
   const { data: hasVoted } = useHasVoted(poll.pollId);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  // Redirect to results page after successful vote
+  useEffect(() => {
+    if (txState.status === "success") {
+      // Short delay to show success state, then redirect
+      const timer = setTimeout(() => {
+        invalidatePoll(poll.pollId);
+        invalidateAll();
+        onOpenChange(false);
+        resetTxState();
+        navigate(`/poll/${poll.pollId}/results`);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [txState.status, poll.pollId, navigate, invalidatePoll, invalidateAll, onOpenChange, resetTxState]);
 
   const handleVote = async () => {
     if (selectedOption !== null) {
@@ -116,6 +133,15 @@ function VoteDialog({ poll, open, onOpenChange }: VoteDialogProps) {
                 ))}
               </div>
             )}
+            <Button
+              className="mt-4"
+              onClick={() => {
+                onOpenChange(false);
+                navigate(`/poll/${poll.pollId}/results`);
+              }}
+            >
+              View Full Results
+            </Button>
           </div>
         ) : status !== "Active" ? (
           <div className="py-6 text-center space-y-4">
@@ -153,6 +179,15 @@ function VoteDialog({ poll, open, onOpenChange }: VoteDialogProps) {
                 })}
               </div>
             )}
+            <Button
+              className="mt-4"
+              onClick={() => {
+                onOpenChange(false);
+                navigate(`/poll/${poll.pollId}/results`);
+              }}
+            >
+              View Full Results
+            </Button>
           </div>
         ) : txState.status !== "idle" ? (
           <div className="py-4">

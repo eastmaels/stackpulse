@@ -10,6 +10,7 @@ import RoleSelectionPage from "@/pages/role-selection";
 import CreatorProjects from "@/pages/creator/projects";
 import CreatorQuests from "@/pages/creator/quests";
 import ParticipantDashboard from "@/pages/participant/dashboard";
+import PollResults from "@/pages/poll/results";
 
 function Router() {
   return (
@@ -23,7 +24,10 @@ function Router() {
       
       {/* Participant Routes */}
       <Route path="/participant/dashboard" component={ParticipantDashboard} />
-      
+
+      {/* Poll Routes */}
+      <Route path="/poll/:pollId/results" component={PollResults} />
+
       <Route component={NotFound} />
     </Switch>
   );
