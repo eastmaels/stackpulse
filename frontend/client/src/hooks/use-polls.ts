@@ -67,7 +67,9 @@ async function fetchPoll(
       senderAddress: contract.address,
     });
 
+    console.log(`[fetchPoll] Poll ${pollId} raw result:`, result);
     const value = cvToValue(result);
+    console.log(`[fetchPoll] Poll ${pollId} cvToValue:`, value);
     if (!value) return null;
 
     return clarityToPoll(pollId, value);
@@ -100,7 +102,9 @@ async function fetchPollOption(
       senderAddress: contract.address,
     });
 
+    console.log(`[fetchPollOption] Poll ${pollId} option ${optionIndex} raw:`, result);
     const value = cvToValue(result);
+    console.log(`[fetchPollOption] Poll ${pollId} option ${optionIndex} value:`, value);
     if (!value) return null;
 
     return clarityToOption(value);
@@ -171,16 +175,22 @@ export function usePollOptions(pollId: number, optionCount: number) {
   const { networkType } = useStacks();
   const contract = getPollContract(networkType);
 
+  console.log(`[usePollOptions] pollId=${pollId}, optionCount=${optionCount}`);
+
   return useQuery({
     queryKey: ['poll-options', pollId, optionCount, networkType],
     queryFn: async () => {
+      console.log(`[usePollOptions] Fetching ${optionCount} options for poll ${pollId}`);
       const options: PollOption[] = [];
       for (let i = 0; i < optionCount; i++) {
+        console.log(`[usePollOptions] Fetching option ${i}...`);
         const option = await fetchPollOption(pollId, i, networkType);
+        console.log(`[usePollOptions] Option ${i} result:`, option);
         if (option) {
           options.push(option);
         }
       }
+      console.log(`[usePollOptions] Final options:`, options);
       return options;
     },
     enabled: pollId > 0 && optionCount > 0 && !!contract.address,

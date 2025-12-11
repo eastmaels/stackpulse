@@ -51,24 +51,53 @@ export interface ClarityVoteResponse {
   'voted-at': bigint;
 }
 
+// Helper to unwrap {type, value} wrapper from cvToValue
+function unwrapCV(val: any): any {
+  if (val === null || val === undefined) return val;
+  if (typeof val === 'object' && 'value' in val && 'type' in val) {
+    return unwrapCV(val.value);
+  }
+  return val;
+}
+
 // Helper to convert Clarity response to Poll
-export function clarityToPoll(pollId: number, data: ClarityPollResponse): Poll {
+export function clarityToPoll(pollId: number, rawData: ClarityPollResponse | { type: string; value: any }): Poll {
+  console.log('[clarityToPoll] Raw data:', rawData);
+
+  // cvToValue may return {type: '...', value: {...}} wrapper - unwrap the top level
+  const data = unwrapCV(rawData);
+  console.log('[clarityToPoll] Unwrapped data:', data);
+
+  // Unwrap each field individually since they may also be wrapped
+  const creator = unwrapCV(data.creator);
+  const title = unwrapCV(data.title);
+  const optionCount = unwrapCV(data['option-count']);
+  const deadline = unwrapCV(data.deadline);
+  const isClosed = unwrapCV(data['is-closed']);
+  const totalVotes = unwrapCV(data['total-votes']);
+  const createdAt = unwrapCV(data['created-at']);
+
+  console.log('[clarityToPoll] Fields:', { creator, title, optionCount, deadline, isClosed, totalVotes, createdAt });
+
   return {
     pollId,
-    creator: data.creator,
-    title: data.title,
-    optionCount: Number(data['option-count']),
-    deadline: Number(data.deadline),
-    isClosed: data['is-closed'],
-    totalVotes: Number(data['total-votes']),
-    createdAt: Number(data['created-at']),
+    creator: String(creator || 'Unknown'),
+    title: String(title || 'Untitled'),
+    optionCount: Number(optionCount) || 0,
+    deadline: Number(deadline) || 0,
+    isClosed: Boolean(isClosed),
+    totalVotes: Number(totalVotes) || 0,
+    createdAt: Number(createdAt) || 0,
   };
 }
 
 // Helper to convert Clarity option response
-export function clarityToOption(data: ClarityOptionResponse): PollOption {
+export function clarityToOption(rawData: ClarityOptionResponse | { type: string; value: ClarityOptionResponse }): PollOption {
+  // cvToValue may return {type: '...', value: {...}} wrapper - unwrap if needed
+  const data = unwrapCV(rawData);
+
   return {
-    text: data.text,
-    voteCount: Number(data['vote-count']),
+    text: String(unwrapCV(data.text) || ''),
+    voteCount: Number(unwrapCV(data['vote-count'])) || 0,
   };
 }

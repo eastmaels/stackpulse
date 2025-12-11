@@ -362,7 +362,7 @@ export default function CreatorProjects() {
                         {poll.title}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground mb-4">
-                        by {poll.creator.slice(0, 8)}...{poll.creator.slice(-4)}
+                        by {poll.creator ? `${poll.creator.slice(0, 8)}...${poll.creator.slice(-4)}` : 'Unknown'}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                         <div>
