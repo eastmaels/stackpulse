@@ -4,10 +4,12 @@ export const POLL_CONTRACT_NAME = 'poll';
 
 export function getPollContract(networkType: NetworkType) {
   const config = getNetworkConfig(networkType);
-  return {
+  const contract = {
     address: config.contractAddress,
     name: POLL_CONTRACT_NAME,
   };
+  console.log('[getPollContract] Network:', networkType, 'Contract:', contract);
+  return contract;
 }
 
 export const CONTRACT_FUNCTIONS = {

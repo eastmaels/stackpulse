@@ -20,7 +20,10 @@ export function usePollActions() {
 
   const createPoll = useCallback(
     async (title: string, options: string[], durationSeconds: number) => {
+      console.log('[createPoll] Starting...', { title, options, durationSeconds, networkType, wallet });
+
       if (!wallet.isConnected) {
+        console.log('[createPoll] Error: Wallet not connected');
         setTxState({
           status: 'error',
           txId: null,
@@ -30,7 +33,10 @@ export function usePollActions() {
       }
 
       const contract = getPollContract(networkType);
+      console.log('[createPoll] Contract info:', contract);
+
       if (!contract.address) {
+        console.log('[createPoll] Error: Contract address is empty/undefined');
         setTxState({
           status: 'error',
           txId: null,
